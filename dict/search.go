@@ -13,6 +13,12 @@ func Match(label string, pattern string) QueryCondition {
     }
 }
 
+func Unmatch(label, pattern string) QueryCondition {
+    return func() string {
+        return fmt.Sprintf(`%s NOT LIKE "%s"`, label, pattern)
+    }
+}
+
 func Include(label string, chars string) QueryCondition {
     return func() string {
         conds := []string{}

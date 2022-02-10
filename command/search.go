@@ -20,7 +20,9 @@ var (
 
 func SearchFlags() []cli.Flag {
     return []cli.Flag{
-        &cli.StringFlag{Name: "match", Usage: "filter by characters with placeholders (placeholder: '_')", Aliases: []string{"m"}},
+        &cli.StringFlag{Name: "dict", Usage: "set dictionary file path"},
+        &cli.StringFlag{Name: "match", Usage: "filter by matched pattern with placeholders (placeholder: '_')", Aliases: []string{"m"}},
+        &cli.StringFlag{Name: "unmatch", Usage: "filter by unmatched pattern with placeholders (placeholder: '_')", Aliases: []string{"u"}},
         &cli.StringFlag{Name: "include", Usage: "filter by included characters", Aliases: []string{"i"}},
         &cli.StringFlag{Name: "exclude", Usage: "filter by non-used characters", Aliases: []string{"e"}},
         &cli.UintFlag{Name: "length", Usage: "filter by word length (ignored when `-m` used)", Aliases: []string{"l"}},
@@ -51,6 +53,10 @@ func buildQuery(ctx *cli.Context) (string, error) {
     if !match_reg.MatchString(m) {
         return "", invalidQuery("`match` should consist of either [A-Z] or '_'")
     }
+    u := ctx.String("unmatch")
+    if !match_reg.MatchString(u) {
+        return "", invalidQuery("`unmatch` should consist of either [A-Z] or '_'")
+    }
     i := ctx.String("include")
     if !include_reg.MatchString(i) {
         return "", invalidQuery("`include` should be [A-Z]")
@@ -65,6 +71,9 @@ func buildQuery(ctx *cli.Context) (string, error) {
         conds = append(conds, dict.Match("word", m))
     } else if l := ctx.Uint("length"); l > 0 {
         conds = append(conds, dict.Length("word", uint32(l)))
+    }
+    if u != "" {
+        conds = append(conds, dict.Unmatch("word", u))
     }
     if i != "" {
         conds = append(conds, dict.Include("word", i))
